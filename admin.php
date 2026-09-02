@@ -95,7 +95,7 @@ require_once 'includes/header.php';
     <?php endforeach; ?>
 </section>
 
-<section class="admin-section">
+<section class="admin-section admin-users-section">
     <h3>Użytkownicy</h3>
     <div class="admin-table-wrapper">
         <table class="admin-table">
@@ -126,7 +126,7 @@ require_once 'includes/header.php';
     </div>
 </section>
 
-<section class="admin-section">
+<section class="admin-section admin-categories-section">
     <h3>Kategorie</h3>
     <form method="POST" action="admin.php" class="admin-category-form">
         <input type="hidden" name="action" value="add_category">
