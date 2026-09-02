@@ -13,6 +13,33 @@ SET time_zone = "+00:00";
 CREATE DATABASE IF NOT EXISTS `telecom_kb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `telecom_kb`;
 
+CREATE TABLE `favorites` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `article_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `article_id` int(11) DEFAULT NULL,
+  `comment_id` int(11) DEFAULT NULL,
+  `message` varchar(255) NOT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `article_reports` (
+  `id` int(11) NOT NULL,
+  `article_id` int(11) NOT NULL,
+  `reporter_id` int(11) NOT NULL,
+  `reason` text NOT NULL,
+  `status` enum('open','resolved','rejected') NOT NULL DEFAULT 'open',
+  `resolved_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `tags` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL
@@ -70,6 +97,7 @@ CREATE TABLE `articles` (
   `category_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `is_pinned` tinyint(1) NOT NULL DEFAULT 0,
+  `is_archived` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -149,6 +177,7 @@ CREATE TABLE `comments` (
   `id` int(11) NOT NULL,
   `article_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
+  `parent_comment_id` int(11) DEFAULT NULL,
   `content` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -220,6 +249,23 @@ ALTER TABLE `articles`
   ADD PRIMARY KEY (`id`),
   ADD KEY `category_id` (`category_id`),
   ADD KEY `user_id` (`user_id`);
+
+ALTER TABLE `favorites`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_user_article_favorite` (`user_id`,`article_id`),
+  ADD KEY `article_id` (`article_id`);
+
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `article_id` (`article_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `comment_id` (`comment_id`);
+
+ALTER TABLE `article_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `article_id` (`article_id`),
+  ADD KEY `reporter_id` (`reporter_id`),
+  ADD KEY `resolved_by` (`resolved_by`);
 ALTER TABLE `articles` ADD FULLTEXT KEY `title` (`title`,`content`);
 
 --
@@ -242,7 +288,8 @@ ALTER TABLE `categories`
 ALTER TABLE `comments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `article_id` (`article_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `parent_comment_id` (`parent_comment_id`);
 
 --
 -- Indeksy dla tabeli `ratings`
@@ -268,6 +315,15 @@ ALTER TABLE `users`
 --
 ALTER TABLE `articles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+ALTER TABLE `favorites`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `article_reports`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `article_reactions`
@@ -310,6 +366,20 @@ ALTER TABLE `articles`
   ADD CONSTRAINT `articles_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `articles_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
+ALTER TABLE `favorites`
+  ADD CONSTRAINT `favorites_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `favorites_ibfk_2` FOREIGN KEY (`article_id`) REFERENCES `articles` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `notifications_ibfk_3` FOREIGN KEY (`article_id`) REFERENCES `articles` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`comment_id`) REFERENCES `comments` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `article_reports`
+  ADD CONSTRAINT `article_reports_ibfk_1` FOREIGN KEY (`article_id`) REFERENCES `articles` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `article_reports_ibfk_2` FOREIGN KEY (`reporter_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `article_reports_ibfk_3` FOREIGN KEY (`resolved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
 ALTER TABLE `tags`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
@@ -330,7 +400,8 @@ ALTER TABLE `article_reactions`
 --
 ALTER TABLE `comments`
   ADD CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`article_id`) REFERENCES `articles` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `comments_ibfk_3` FOREIGN KEY (`parent_comment_id`) REFERENCES `comments` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `ratings`

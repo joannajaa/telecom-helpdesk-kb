@@ -59,6 +59,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$categoryId]);
             $message = 'Kategoria została usunięta.';
         }
+    } elseif ($action === 'update_report') {
+        $reportId = (int)($_POST['report_id'] ?? 0);
+        $status = $_POST['status'] ?? '';
+        if ($reportId <= 0 || !in_array($status, ['open', 'resolved', 'rejected'], true)) {
+            $message = 'Nieprawidłowe zgłoszenie.';
+        } else {
+            $reportStmt = $pdo->prepare(
+                'SELECT article_id, reporter_id FROM article_reports WHERE id = ?'
+            );
+            $reportStmt->execute([$reportId]);
+            $report = $reportStmt->fetch();
+
+            if (!$report) {
+                $message = 'Nie znaleziono zgłoszenia.';
+            } else {
+                $stmt = $pdo->prepare('UPDATE article_reports SET status = ?, resolved_by = ? WHERE id = ?');
+                $stmt->execute([$status, $_SESSION['user_id'], $reportId]);
+
+                $statusLabels = [
+                    'open' => 'ponownie otwarte',
+                    'resolved' => 'rozpatrzone',
+                    'rejected' => 'odrzucone',
+                ];
+                $notificationStmt = $pdo->prepare(
+                    'INSERT INTO notifications (user_id, article_id, message) VALUES (?, ?, ?)'
+                );
+                $notificationStmt->execute([
+                    $report['reporter_id'],
+                    $report['article_id'],
+                    'Administrator oznaczył Twoje zgłoszenie jako: ' . $statusLabels[$status] . '.',
+                ]);
+                $message = 'Status zgłoszenia został zaktualizowany.';
+            }
+        }
     }
 }
 
@@ -76,6 +110,15 @@ $categories = $pdo->query(
      LEFT JOIN articles a ON a.category_id = c.id
      GROUP BY c.id
      ORDER BY c.name ASC'
+)->fetchAll();
+$reports = $pdo->query(
+    'SELECT ar.id, ar.reason, ar.status, ar.created_at, a.id AS article_id, a.title,
+            u.username AS reporter
+     FROM article_reports ar
+     JOIN articles a ON a.id = ar.article_id
+     JOIN users u ON u.id = ar.reporter_id
+     WHERE ar.status = "open"
+     ORDER BY ar.created_at DESC'
 )->fetchAll();
 require_once 'includes/header.php';
 ?>
@@ -149,6 +192,34 @@ require_once 'includes/header.php';
             </li>
         <?php endforeach; ?>
     </ul>
+</section>
+
+<section class="admin-section">
+    <h3>Zgłoszenia nieaktualnych artykułów</h3>
+    <div class="admin-reports">
+        <?php if (empty($reports)): ?>
+            <p>Brak otwartych zgłoszeń.</p>
+        <?php else: ?>
+            <?php foreach ($reports as $report): ?>
+                <div class="admin-report">
+                    <strong><a href="article.php?id=<?= $report['article_id'] ?>"><?= htmlspecialchars($report['title']) ?></a></strong>
+                    <span>Od: <?= htmlspecialchars($report['reporter']) ?> · <?= date('d.m.Y H:i', strtotime($report['created_at'])) ?></span>
+                    <p><?= nl2br(htmlspecialchars($report['reason'])) ?></p>
+                    <form method="POST" action="admin.php">
+                        <input type="hidden" name="action" value="update_report">
+                        <input type="hidden" name="report_id" value="<?= $report['id'] ?>">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                        <select name="status">
+                            <?php foreach (['open' => 'Otwarte', 'resolved' => 'Rozpatrzone', 'rejected' => 'Odrzucone'] as $value => $label): ?>
+                                <option value="<?= $value ?>" <?= $report['status'] === $value ? 'selected' : '' ?>><?= $label ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit">Zapisz</button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
 </section>
 
 <?php require_once 'includes/footer.php'; ?>

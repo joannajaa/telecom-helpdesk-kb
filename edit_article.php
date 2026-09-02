@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image_name  = $article['image'];
     
     $is_pinned = (($_SESSION['role'] ?? '') === 'admin' && isset($_POST['is_pinned'])) ? 1 : ((($_SESSION['role'] ?? '') === 'admin') ? 0 : (int)$article['is_pinned']);
+    $is_archived = (($_SESSION['role'] ?? '') === 'admin' && isset($_POST['is_archived'])) ? 1 : (int)$article['is_archived'];
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -79,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($message)) {
         if (!empty($title) && !empty($content) && $category_id > 0) {
             $pdo->beginTransaction();
-            $updateStmt = $pdo->prepare("UPDATE articles SET title = ?, content = ?, image = ?, category_id = ?, is_pinned = ? WHERE id = ?");
-            $updateStmt->execute([$title, $content, $image_name, $category_id, $is_pinned, $articleId]);
+            $updateStmt = $pdo->prepare("UPDATE articles SET title = ?, content = ?, image = ?, category_id = ?, is_pinned = ?, is_archived = ? WHERE id = ?");
+            $updateStmt->execute([$title, $content, $image_name, $category_id, $is_pinned, $is_archived, $articleId]);
             syncArticleTags($pdo, $articleId, $tagNames);
             $pdo->commit();
 
@@ -142,6 +143,13 @@ require_once 'includes/header.php';
             <label>
                 <input type="checkbox" name="is_pinned" value="1" <?= !empty($article['is_pinned']) ? 'checked' : '' ?>>
                 📌 Przypnij artykuł na górze listy
+            </label>
+        </div>
+        <br>
+        <div>
+            <label>
+                <input type="checkbox" name="is_archived" value="1" <?= !empty($article['is_archived']) ? 'checked' : '' ?>>
+                Oznacz jako archiwalny
             </label>
         </div>
         <br>

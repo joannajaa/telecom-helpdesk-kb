@@ -160,11 +160,14 @@ $articles = $stmt->fetchAll();
                         <?php if (!empty($art['is_pinned'])): ?>
                             <span style="color: #f59e0b; font-size: 0.9em; margin-right: 4px;" title="Przypięty artykuł">📌</span>
                         <?php endif; ?>
+                        <?php if (!empty($art['is_archived'])): ?>
+                            <span class="archived-badge">Archiwalny</span>
+                        <?php endif; ?>
                         <a href="article.php?id=<?= $art['id'] ?>"><?= htmlspecialchars($art['title']) ?></a>
                     </h3>
                     <p class="article-meta">
                         Kategoria: 
-                        <a href="index.php?cat=<?= $art['category_id'] ?>"><strong><?= htmlspecialchars($art['category_name']) ?></strong></a> 
+                        <a class="category-link" href="index.php?cat=<?= $art['category_id'] ?>"><strong><?= htmlspecialchars($art['category_name']) ?></strong></a> 
                         | Autor: <?= htmlspecialchars($art['username']) ?> 
                         | <?= date('d.m.Y H:i', strtotime($art['created_at'])) ?>
                         | Oceny: <strong>+<?= (int)$art['upvotes_count'] ?></strong>

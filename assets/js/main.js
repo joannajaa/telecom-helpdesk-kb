@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const likeBtn = document.getElementById('like-btn');
-    const likeText = document.getElementById('like-text');
     const likesCount = document.getElementById('likes-count');
     const feedback = document.getElementById('rating-feedback');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -40,9 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (data.success) {
                     likesCount.textContent = data.likes ?? data.new_likes;
-                    if (likeText) {
-                        likeText.textContent = data.action === 'added' ? 'Cofnij ocenę' : 'Pomocna';
-                    }
                     feedback.style.color = '#10b981';
                     feedback.textContent = data.message;
                 } else {
@@ -54,6 +50,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedback.textContent = 'Wystąpił błąd podczas wysyłania oceny.';
             } finally {
                 likeBtn.disabled = false;
+            }
+        });
+    }
+
+    document.querySelectorAll('.reply-toggle').forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+            const replyForm = document.getElementById(toggle.dataset.target);
+            if (!replyForm) {
+                return;
+            }
+
+            replyForm.hidden = !replyForm.hidden;
+            if (!replyForm.hidden) {
+                replyForm.querySelector('input[name="comment_content"]').focus();
+            }
+        });
+    });
+
+    const notificationsMenu = document.querySelector('.notifications-menu');
+    if (notificationsMenu) {
+        notificationsMenu.addEventListener('toggle', async () => {
+            if (!notificationsMenu.open || !notificationsMenu.querySelector('.notification-badge')) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'mark_all_read');
+            formData.append('csrf_token', csrfToken);
+
+            try {
+                const response = await fetch('notification_read.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    console.error(data.message || 'Nie udało się oznaczyć powiadomień jako przeczytanych.');
+                    return;
+                }
+
+                const badge = notificationsMenu.querySelector('.notification-badge');
+                const summary = notificationsMenu.querySelector('.notification-summary');
+                if (badge) {
+                    badge.remove();
+                }
+                if (summary) {
+                    summary.classList.remove('has-unread');
+                }
+            } catch (error) {
+                console.error(error);
             }
         });
     }

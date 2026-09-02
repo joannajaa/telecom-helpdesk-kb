@@ -27,7 +27,7 @@ Aplikacja została zbudowana w modelu klient-serwer z podziałem na warstwę pre
 * Style i widok druku: Zmienne CSS umożliwiające obsługę trzech motywów kolorystycznych oraz dedykowane reguły `@media print` przygotowujące instrukcję do czystego wydruku.
 
 ## 3. Struktura bazy danych
-Baza danych `telecom_kb` składa się z 8 powiązanych ze sobą tabel:
+Baza danych `telecom_kb` składa się z 11 powiązanych ze sobą tabel:
 
 ### Schemat tabel:
 * users – przechowuje konta konsultantów i administratorów.
@@ -50,6 +50,7 @@ Baza danych `telecom_kb` składa się z 8 powiązanych ze sobą tabel:
   * `category_id` (INT, FK -> categories.id)
   * `user_id` (INT, FK -> users.id)
   * `is_pinned` (TINYINT(1), DEFAULT 0)
+  * `is_archived` (TINYINT(1), DEFAULT 0)
   * `created_at` (TIMESTAMP)
 
 * ratings – system oceniania przydatności artykułów.
@@ -71,6 +72,7 @@ Baza danych `telecom_kb` składa się z 8 powiązanych ze sobą tabel:
   * `article_id` (INT, FK -> articles.id)
   * `user_id` (INT, FK -> users.id)
   * `content` (TEXT)
+  * `parent_comment_id` (INT, nullable, FK -> comments.id)
   * `created_at` (TIMESTAMP)
 
 * tags – słownik tagów artykułów.
@@ -80,6 +82,26 @@ Baza danych `telecom_kb` składa się z 8 powiązanych ze sobą tabel:
 * article_tags – tabela pośrednia relacji artykułów i tagów.
   * `article_id` (INT, FK -> articles.id)
   * `tag_id` (INT, FK -> tags.id)
+
+* favorites – zapisane przez użytkowników ulubione artykuły.
+  * `id` (INT, PK, AUTO_INCREMENT)
+  * `user_id` (INT, FK -> users.id)
+  * `article_id` (INT, FK -> articles.id)
+  * `created_at` (TIMESTAMP)
+
+* notifications – powiadomienia o komentarzach, odpowiedziach i zgłoszeniach.
+  * `id` (INT, PK, AUTO_INCREMENT)
+  * `user_id` (INT, FK -> users.id)
+  * `article_id` (INT, nullable, FK -> articles.id)
+  * `comment_id` (INT, nullable, FK -> comments.id)
+  * `is_read` (TINYINT(1))
+
+* article_reports – zgłoszenia nieaktualnych artykułów.
+  * `id` (INT, PK, AUTO_INCREMENT)
+  * `article_id` (INT, FK -> articles.id)
+  * `reporter_id` (INT, FK -> users.id)
+  * `reason` (TEXT)
+  * `status` (ENUM: open, resolved, rejected)
 
 ### Relacje między tabelami:
 * categories -> articles (1:N)
@@ -91,6 +113,12 @@ Baza danych `telecom_kb` składa się z 8 powiązanych ze sobą tabel:
 * articles -> comments (1:N)
 * users -> comments (1:N)
 * articles <-> tags (N:M)
+* users -> favorites (1:N)
+* articles -> favorites (1:N)
+* users -> notifications (1:N)
+* comments -> notifications (1:N)
+* articles -> article_reports (1:N)
+* users -> article_reports (1:N)
 
 ## 4. Instrukcja instalacji i uruchomienia
 
@@ -117,7 +145,7 @@ W pliku `includes/db.php` upewnij się, że parametry połączenia odpowiadają 
 
 ### Krok 4: Uruchomienie aplikacji
 Otwórz w przeglądarce adres:
-`http://localhost/telecom_kb/index.php`
+`http://localhost/telecom-kb/index.php`
 
 ## 5. Konta testowe
 
@@ -132,12 +160,16 @@ Otwórz w przeglądarce adres:
 * Obsługa załączników graficznych: Bezpieczny upload plików graficznych (walidacja typów MIME przez Fileinfo, limit rozmiaru do 2 MB, unikalne nazwy).
 * Kategoryzacja i szybka nawigacja: Podział na działy oraz możliwość bezpośredniego filtrowania listy z poziomu podglądu artykułu.
 * Tagi artykułów: Możliwość przypisywania wielu tagów do procedury oraz filtrowania po kliknięciu tagu.
+* Ulubione artykuły: Możliwość zapisywania artykułów i przeglądania ich na osobnej stronie.
 * Wyszukiwanie i sortowanie: Wyszukiwanie pełnotekstowe w tytułach i treściach, filtrowanie po działach, sortowanie według daty lub popularności oraz paginacja wyników.
 * Przypinanie procedur awaryjnych: Możliwość oznaczenia wpisu jako przypiętego (`is_pinned`) przez administratora, co pozycjonuje go na górze listy.
+* Archiwizacja artykułów: Administrator może oznaczyć nieaktualny artykuł jako archiwalny.
+* Zgłaszanie nieaktualności: Użytkownicy mogą zgłaszać artykuły autorowi i administratorom, a zgłoszenia są obsługiwane w panelu administratora.
 * Panel administratora: Statystyki, zarządzanie rolami i aktywnością użytkowników oraz dodawanie/usuwanie pustych kategorii. Moderacja komentarzy odbywa się bezpośrednio pod odpowiednimi artykułami.
 * Asynchroniczny system ocen (AJAX): Ocenianie przydatności procedury bez przeładowania strony z blokadą wielokrotnego głosu.
 * System reakcji graficznych (AJAX): Możliwość reagowania na wpisy wybranymi emotkami w czasie rzeczywistym.
-* Notatki techniczne: Moduł komentarzy pod procedurami chroniony przed atakami CSRF i XSS.
+* Notatki techniczne: Moduł komentarzy pod procedurami chroniony przed atakami CSRF i XSS, z edycją i usuwaniem własnych komentarzy oraz usuwaniem komentarzy przez administratora.
+* Powiadomienia: Rozwijana lista w nagłówku z licznikiem nieprzeczytanych powiadomień o nowych komentarzach i odpowiedziach.
 * Personalizacja interfejsu: Trzy wbudowane motywy kolorystyczne (Jasny, Dark Blue, Dark Pink) z zapamiętywaniem wyboru w `localStorage`.
 * Widok do druku: Dedykowany arkusz stylów drukarskich ukrywający elementy nawigacyjne i interaktywne na potrzeby fizycznego wydruku procedury.
 * Zabezpieczenia: Ochrona przed SQL Injection (Prepared Statements PDO), XSS (`htmlspecialchars`) oraz CSRF (tokeny sesyjne w formularzach, usuwaniu i AJAX).
