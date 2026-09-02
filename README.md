@@ -20,7 +20,7 @@ Aplikacja została zbudowana w modelu klient-serwer z podziałem na warstwę pre
 
 ### Kluczowe decyzje architektoniczne:
 * PHP Data Objects (PDO): Zastosowano zapytania przygotowane (prepared statements), co zapewnia ochronę przed atakami typu SQL Injection.
-* Ochrona sesji i formularzy: Implementacja tokenów CSRF (`hash_equals`) zabezpieczających żądania POST i akcje usuwania.
+* Ochrona sesji i formularzy: Implementacja tokenów CSRF (`hash_equals`) zabezpieczających żądania POST, akcje usuwania oraz żądania AJAX.
 * Architektura modułowa: Wspólne elementy interfejsu (nagłówek, stopka, nawigacja) oraz połączenie z bazą danych zostały wydzielone do katalogu `includes/`.
 * Asynchroniczność (Fetch API): Moduły oceniania artykułów oraz dodawania reakcji emotkami działają w czasie rzeczywistym bez przeładowywania strony.
 * Wyszukiwanie pełnotekstowe: Zastosowanie indeksu `FULLTEXT` (`MATCH...AGAINST`) w tabeli artykułów.
@@ -34,13 +34,14 @@ Baza danych `telecom_kb` składa się z 6 powiązanych ze sobą tabel:
   * `id` (INT, PK, AUTO_INCREMENT)
   * `username` (VARCHAR, UNIQUE)
   * `password` (VARCHAR, hash bcrypt)
-  * `role` (ENUM: 'user', 'admin')
-  * `created_at` (DATETIME)
+  * `email` (VARCHAR, UNIQUE)
+  * `role` (VARCHAR: 'user' lub 'admin')
+  * `created_at` (TIMESTAMP)
 
 * categories – działy tematyczne zgłoszeń technicznych.
   * `id` (INT, PK, AUTO_INCREMENT)
-  * `name` (VARCHAR, UNIQUE)
-  * `created_at` (DATETIME)
+  * `name` (VARCHAR)
+  * `description` (TEXT, NULLable)
 
 * articles – baza procedur technicznych.
   * `id` (INT, PK, AUTO_INCREMENT)
@@ -50,28 +51,28 @@ Baza danych `telecom_kb` składa się z 6 powiązanych ze sobą tabel:
   * `category_id` (INT, FK -> categories.id)
   * `user_id` (INT, FK -> users.id)
   * `is_pinned` (TINYINT(1), DEFAULT 0)
-  * `created_at` (DATETIME)
+  * `created_at` (TIMESTAMP)
 
 * ratings – system oceniania przydatności artykułów.
   * `id` (INT, PK, AUTO_INCREMENT)
   * `article_id` (INT, FK -> articles.id)
   * `user_id` (INT, FK -> users.id)
   * `rating_value` (TINYINT)
-  * `created_at` (DATETIME)
+  * `created_at` (TIMESTAMP)
 
 * article_reactions – asynchroniczne reakcje graficzne do wpisów.
   * `id` (INT, PK, AUTO_INCREMENT)
   * `article_id` (INT, FK -> articles.id)
   * `user_id` (INT, FK -> users.id)
   * `emoji` (VARCHAR)
-  * `created_at` (DATETIME)
+  * `created_at` (TIMESTAMP)
 
 * comments – uwagi i notatki serwisowe konsultantów pod procedurami.
   * `id` (INT, PK, AUTO_INCREMENT)
   * `article_id` (INT, FK -> articles.id)
   * `user_id` (INT, FK -> users.id)
   * `content` (TEXT)
-  * `created_at` (DATETIME)
+  * `created_at` (TIMESTAMP)
 
 ### Relacje między tabelami:
 * categories -> articles (1:N)
@@ -90,14 +91,14 @@ Baza danych `telecom_kb` składa się z 6 powiązanych ze sobą tabel:
 * Przeglądarka internetowa
 
 ### Krok 1: Kopiowanie plików aplikacji
-1. Skopiuj katalog projektu do folderu:
-   `C:\xampp\htdocs\telecom_kb`
+1. Skopiuj katalog projektu do folderu serwera XAMPP, np.:
+   `C:\xampp\htdocs\telecom-kb`
 
 ### Krok 2: Import bazy danych
 1. Uruchom Apache oraz MySQL w XAMPP Control Panel.
 2. Otwórz w przeglądarce adres: `http://localhost/phpmyadmin/`.
-3. Utwórz nową bazę danych o nazwie `telecom_kb` z kodowaniem `utf8mb4_unicode_ci`.
-4. Przejdź do zakładki Importuj, wybierz plik zrzutu bazy danych i zatwierdź import.
+3. Utwórz nową bazę danych o nazwie `telecom_kb` z kodowaniem `utf8mb4_unicode_ci` (eksport SQL zawiera również instrukcję `CREATE DATABASE IF NOT EXISTS`).
+4. Przejdź do zakładki Importuj, wybierz plik `telecom_kb.sql` i zatwierdź import.
 
 ### Krok 3: Weryfikacja połączenia
 W pliku `includes/db.php` upewnij się, że parametry połączenia odpowiadają konfiguracji serwera:
@@ -114,7 +115,7 @@ Otwórz w przeglądarce adres:
 
 | Rola | Login | Hasło | Zakres uprawnień |
 | :--- | :--- | :--- | :--- |
-| Administrator | `admin` | `admin1234` | Pełny dostęp do bazy wiedzy, przypinanie procedur, zarządzanie wpisami i kategoriami |
+| Administrator | `admin` | `admin1234` | Przypinanie procedur oraz zarządzanie własnymi i wszystkimi wpisami |
 | Konsultant | `testowy` | `admin1234` | Przeglądanie bazy, dodawanie wpisów, komentarze, reakcje oraz system oceniania |
 
 ## 6. Główne funkcjonalności systemu
@@ -129,4 +130,4 @@ Otwórz w przeglądarce adres:
 * Notatki techniczne: Moduł komentarzy pod procedurami chroniony przed atakami CSRF i XSS.
 * Personalizacja interfejsu: Trzy wbudowane motywy kolorystyczne (Jasny, Dark Blue, Dark Pink) z zapamiętywaniem wyboru w `localStorage`.
 * Widok do druku: Dedykowany arkusz stylów drukarskich ukrywający elementy nawigacyjne i interaktywne na potrzeby fizycznego wydruku procedury.
-* Zabezpieczenia: Ochrona przed SQL Injection (Prepared Statements PDO), XSS (`htmlspecialchars`) oraz CSRF (tokeny sesyjne).
+* Zabezpieczenia: Ochrona przed SQL Injection (Prepared Statements PDO), XSS (`htmlspecialchars`) oraz CSRF (tokeny sesyjne w formularzach, usuwaniu i AJAX).

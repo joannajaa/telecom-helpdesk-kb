@@ -5,6 +5,15 @@ require_once 'includes/db.php';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    $submittedToken = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'], $submittedToken)) {
+        die('Błąd weryfikacji żądania (CSRF).');
+    }
+
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -32,19 +41,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>Logowanie - Helpdesk KB</title>
-</head>
-<body>
-    <h2>Logowanie do Helpdesku</h2>
+<?php require_once 'includes/header.php'; ?>
+
+<h2>Logowanie do Helpdesku</h2>
     <?php if ($error): ?>
         <p style="color: red;"><strong><?= htmlspecialchars($error) ?></strong></p>
     <?php endif; ?>
 
     <form action="login.php" method="POST">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <div>
             <label>Login:</label><br>
             <input type="text" name="username" required>
@@ -57,5 +62,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit">Zaloguj się</button>
     </form>
     <p>Nie masz konta? <a href="register.php">Zarejestruj się</a></p>
-</body>
-</html>
+
+<?php require_once 'includes/footer.php'; ?>

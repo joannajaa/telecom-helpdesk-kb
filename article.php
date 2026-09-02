@@ -3,7 +3,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once 'includes/db.php';
-require_once 'includes/header.php';
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 $articleId = (int)($_GET['id'] ?? 0);
 
@@ -16,6 +19,7 @@ $stmt->execute([$articleId]);
 $article = $stmt->fetch();
 
 if (!$article) {
+    require_once 'includes/header.php';
     echo "<p>Artykuł nie został znaleziony. <a href='index.php'>Wróć do listy</a></p>";
     require_once 'includes/footer.php';
     exit;
@@ -85,6 +89,8 @@ $stmtComments = $pdo->prepare("SELECT c.*, u.username
                               ORDER BY c.created_at ASC");
 $stmtComments->execute([$articleId]);
 $comments = $stmtComments->fetchAll();
+
+require_once 'includes/header.php';
 ?>
 
 <article class="article-details">
@@ -209,7 +215,10 @@ document.querySelectorAll('.btn-emote').forEach(btn => {
         try {
             const response = await fetch('react_ajax.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
                 body: JSON.stringify({ article_id: articleId, emoji: emoji })
             });
             const data = await response.json();

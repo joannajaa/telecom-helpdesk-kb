@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const likeText = document.getElementById('like-text');
     const likesCount = document.getElementById('likes-count');
     const feedback = document.getElementById('rating-feedback');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
     if (likeBtn) {
         likeBtn.addEventListener('click', async () => {
@@ -29,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch('rate_ajax.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
                     },
                     body: JSON.stringify({ article_id: articleId })
                 });

@@ -9,6 +9,12 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+$csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+    echo json_encode(['success' => false, 'message' => 'Błąd weryfikacji żądania (CSRF).']);
+    exit;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 $articleId = (int)($data['article_id'] ?? 0);
 $userId = (int)$_SESSION['user_id'];
