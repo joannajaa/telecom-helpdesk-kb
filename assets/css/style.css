@@ -1,0 +1,212 @@
+:root, [data-theme="light"] {
+    --bg-main: #f4f4f5;       
+    --bg-card: #ffffff;      
+    --bg-header: #18181b;     
+    --text-main: #18181b;     
+    --text-muted: #71717a;     
+    --border-color: #e4e4e7;   
+    --accent: #27272a;        
+    --accent-hover: #3f3f46;   
+    --accent-text: #ffffff; 
+}
+
+[data-theme="dark"] {
+    --bg-main: #09090b;    
+    --bg-card: #18181b;      
+    --bg-header: #121215;     
+    --text-main: #f4f4f5;     
+    --text-muted: #a1a1aa;    
+    --border-color: #27272a;   
+    --accent: #38bdf8;        
+    --accent-hover: #0284c7;  
+    --accent-text: #09090b;   
+}
+
+[data-theme="dark-pink"] {
+    --bg-main: #0b090a;       
+    --bg-card: #16161a;        
+    --bg-header: #121013;       
+    --text-main: #f4f4f5;      
+    --text-muted: #a1a1aa;      
+    --border-color: #272226;    
+    --accent: #ec4899;        
+    --accent-hover: #db2777;    
+    --accent-text: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-header {
+    background-color: var(--bg-header);
+    color: #ffffff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.main-header .logo h1 a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-links a {
+    color: #a1a1aa;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.nav-links a:hover {
+    color: #ffffff;
+}
+
+.user-badge {
+    background: #27272a;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    border: 1px solid #3f3f46;
+}
+
+.theme-selector {
+    background-color: #27272a !important;
+    color: #f4f4f5 !important;
+    border: 1px solid #3f3f46 !important;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    width: auto !important;
+    margin-top: 0 !important;
+}
+
+.theme-selector option {
+    background-color: #18181b;
+    color: #f4f4f5;
+}
+
+.container {
+    max-width: 900px;
+    width: 100%;
+    margin: 40px auto;
+    padding: 30px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    flex: 1;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+button {
+    background-color: var(--accent);
+    color: var(--accent-text);
+    padding: 9px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+button:hover {
+    background-color: var(--accent-hover);
+}
+
+.btn-logout {
+    background-color: transparent !important;
+    color: #f4f4f5 !important;
+    border: 1px solid #52525b !important;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-logout:hover {
+    background-color: #27272a !important;
+    border-color: #a1a1aa !important;
+    color: #ffffff !important;
+}
+
+a {
+    color: var(--accent);
+}
+
+.articles-list article {
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 0;
+}
+
+.articles-list h3 a {
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 1.2rem;
+}
+
+.articles-list h3 a:hover {
+    color: var(--accent);
+}
+
+.meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 6px 0 10px 0;
+}
+
+.main-footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
