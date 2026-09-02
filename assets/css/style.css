@@ -170,6 +170,10 @@ button:hover {
     background-color: var(--accent-hover);
 }
 
+.btn-emote {
+    color: var(--text-main);
+}
+
 .nav-links a.btn-logout {
     background-color: transparent;
     color: #f4f4f5;
@@ -211,6 +215,228 @@ a {
     flex: 1;
     min-width: 150px;
     margin-top: 0;
+}
+
+.selected-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -12px 0 25px;
+}
+
+.selected-tags-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.selected-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 0.85rem;
+}
+
+.selected-tag a {
+    color: inherit;
+    font-size: 1.1rem;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.auth-form {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    width: 100%;
+}
+
+.auth-heading,
+.auth-switch,
+.page-heading {
+    text-align: center;
+}
+
+.page-heading {
+    margin-bottom: 20px;
+}
+
+.admin-message {
+    margin-bottom: 20px;
+    padding: 10px 12px;
+    color: var(--text-main);
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.admin-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 16px;
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.admin-stat strong {
+    font-size: 1.7rem;
+    color: var(--accent);
+}
+
+.admin-section {
+    margin-top: 28px;
+}
+
+.admin-section + .admin-section {
+    margin-top: 42px;
+}
+
+.admin-section h3 {
+    margin-bottom: 12px;
+}
+
+.admin-table-wrapper {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table th:last-child,
+.admin-table th:last-child {
+    text-align: center;
+}
+
+.admin-table td:last-child {
+    text-align: center;
+}
+
+.admin-table th:nth-child(3),
+.admin-table td:nth-child(3) {
+    text-align: center;
+}
+
+.admin-table th:nth-child(2),
+.admin-table td:nth-child(2) {
+    text-align: center;
+}
+
+.admin-table td:last-child form {
+    display: flex;
+    justify-content: center;
+}
+
+.admin-table select {
+    width: auto;
+    margin-top: 0;
+    padding-right: 28px;
+}
+
+.admin-category-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.admin-category-form input {
+    flex: 1;
+    min-width: 180px;
+}
+
+.admin-category-form button {
+    height: 46px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.admin-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
+}
+
+.admin-list li,
+.admin-comment {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.category-list {
+    gap: 6px;
+}
+
+.category-list li {
+    font-size: 0.9rem;
+}
+
+.admin-comment {
+    display: block;
+}
+
+.admin-comment p {
+    margin: 8px 0;
+}
+
+.admin-comment form {
+    margin-top: 10px;
+}
+
+.comment-moderation-form {
+    margin-top: 10px;
+}
+
+.danger-button {
+    background: #dc2626;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+}
+
+.danger-button:hover {
+    background: #b91c1c;
+}
+
+.auth-switch {
+    margin-top: 15px;
 }
 
 .clear-filter {
@@ -268,6 +494,29 @@ a {
     display: inline-block;
     margin-top: 8px;
     font-weight: 500;
+}
+
+.article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.tag-link {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--accent);
+    background: var(--bg-main);
+    font-size: 0.82rem;
+    text-decoration: none;
+}
+
+.tag-link:hover {
+    background: var(--accent);
+    color: var(--accent-text);
 }
 
 .main-footer {

@@ -25,6 +25,9 @@ if (empty($_SESSION['csrf_token'])) {
             <a href="index.php">Baza wiedzy</a>
             <?php if (isset($_SESSION['user_id'])): ?>
                 <a href="add_article.php">Dodaj artykuł</a>
+                <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                    <a href="admin.php">Panel admina</a>
+                <?php endif; ?>
                 <span class="user-badge">Konsultant: <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></span>
                 <a href="logout.php" class="btn-logout">Wyloguj</a>
             <?php else: ?>

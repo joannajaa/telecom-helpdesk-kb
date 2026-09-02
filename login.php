@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
 
-        if ($user && password_verify($password, $user['password'])) {
+        if ($user && (int)$user['is_active'] === 1 && password_verify($password, $user['password'])) {
 
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
@@ -43,12 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <?php require_once 'includes/header.php'; ?>
 
-<h2>Logowanie do Helpdesku</h2>
+<h2 class="auth-heading">Logowanie</h2>
     <?php if ($error): ?>
         <p style="color: red;"><strong><?= htmlspecialchars($error) ?></strong></p>
     <?php endif; ?>
 
-    <form action="login.php" method="POST">
+    <form action="login.php" method="POST" class="auth-form">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <div>
             <label>Login:</label><br>
@@ -61,6 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <br>
         <button type="submit">Zaloguj się</button>
     </form>
-    <p>Nie masz konta? <a href="register.php">Zarejestruj się</a></p>
+    <p class="auth-switch">Nie masz konta? <a href="register.php">Zarejestruj się</a></p>
 
 <?php require_once 'includes/footer.php'; ?>

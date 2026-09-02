@@ -13,6 +13,39 @@ SET time_zone = "+00:00";
 CREATE DATABASE IF NOT EXISTS `telecom_kb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `telecom_kb`;
 
+CREATE TABLE `tags` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `article_tags` (
+  `article_id` int(11) NOT NULL,
+  `tag_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `tags` (`id`, `name`) VALUES
+(1, 'światłowód'),
+(2, 'diagnostyka'),
+(3, 'iptv'),
+(4, 'dekoder'),
+(5, 'telewizja'),
+(6, 'uprawnienia'),
+(7, 'router'),
+(8, 'wi-fi'),
+(9, 'zasieg');
+
+INSERT INTO `article_tags` (`article_id`, `tag_id`) VALUES
+(2, 1),
+(2, 2),
+(3, 3),
+(3, 4),
+(3, 5),
+(3, 6),
+(4, 2),
+(4, 7),
+(4, 8),
+(4, 9);
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -90,22 +123,21 @@ INSERT INTO `article_reactions` (`id`, `article_id`, `user_id`, `emoji`, `create
 
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `description` text DEFAULT NULL
+  `name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `name`, `description`) VALUES
-(1, 'Światłowód i FTTH', 'Procedury związane z łączem światłowodowym i terminalami ONT'),
-(2, 'Routery i Wi-Fi', 'Konfiguracja urządzeń abonenckich, modemy i sieć bezprzewodowa'),
-(3, 'Telefonia komórkowa', 'Karty SIM, roaming, konfiguracja APN i zasięg GSM'),
-(4, 'Telewizja IPTV', 'Dekodery, konfiguracja multiroom i problemy z sygnałem TV'),
-(5, 'Telewizja (DVB-T / DVB-C)', 'Diagnostyka sygnału antenowego, telewizja kablowa i naziemna'),
-(6, 'Awarie masowe i komunikaty', 'Procedury eskalacji awarii rejonowych oraz komunikaty sieciowe'),
-(7, 'Infrastruktura sieciowa (Switche / OLT)', 'Zarządzanie węzłami sieci, przełączniki dystrybucyjne i centrale');
+INSERT INTO `categories` (`id`, `name`) VALUES
+(1, 'Światłowód i FTTH'),
+(2, 'Routery i Wi-Fi'),
+(3, 'Telefonia komórkowa'),
+(4, 'Telewizja IPTV'),
+(5, 'Telewizja (DVB-T / DVB-C)'),
+(6, 'Awarie masowe i komunikaty'),
+(7, 'Infrastruktura sieciowa (Switche / OLT)');
 
 -- --------------------------------------------------------
 
@@ -162,9 +194,9 @@ INSERT INTO `ratings` (`id`, `article_id`, `user_id`, `rating_value`, `created_a
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` varchar(20) NOT NULL DEFAULT 'user',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -172,10 +204,10 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`) VALUES
-(1, 'admin', '', '$2y$10$PBy2UrixQWhENa1Rv5O3te0eAfWjPPsHMymo5l0.ExNVGfrwrJDQe', 'admin', '2026-09-01 22:14:30'),
-(2, 'testowy', 'testowy@test.pl', '$2y$10$u2EQwhUepwWoT.yWk5Pf8.DjJThSahkb1Jv7uqLVqtk1prL1xxEay', 'user', '2026-09-02 17:51:54'),
-(3, 'wiewiorka', 'test@test.test', '$2y$10$lq.Gi6MU8JSsrum/HofWq.qlyB3RNbmjd5yuBuVb.Ob2Z1RxN9TrW', 'user', '2026-09-02 18:32:35');
+INSERT INTO `users` (`id`, `username`, `password`, `role`, `is_active`, `created_at`) VALUES
+(1, 'admin', '$2y$10$PBy2UrixQWhENa1Rv5O3te0eAfWjPPsHMymo5l0.ExNVGfrwrJDQe', 'admin', 1, '2026-09-01 22:14:30'),
+(2, 'testowy', '$2y$10$u2EQwhUepwWoT.yWk5Pf8.DjJThSahkb1Jv7uqLVqtk1prL1xxEay', 'user', 1, '2026-09-02 17:51:54'),
+(3, 'wiewiorka', '$2y$10$lq.Gi6MU8JSsrum/HofWq.qlyB3RNbmjd5yuBuVb.Ob2Z1RxN9TrW', 'user', 1, '2026-09-02 18:32:35');
 
 --
 -- Indeksy dla zrzutów tabel
@@ -225,8 +257,7 @@ ALTER TABLE `ratings`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `username` (`username`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -279,6 +310,14 @@ ALTER TABLE `articles`
   ADD CONSTRAINT `articles_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `articles_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
+ALTER TABLE `tags`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+ALTER TABLE `article_tags`
+  ADD PRIMARY KEY (`article_id`,`tag_id`),
+  ADD KEY `tag_id` (`tag_id`);
+
 --
 -- Constraints for table `article_reactions`
 --
@@ -299,6 +338,13 @@ ALTER TABLE `comments`
 ALTER TABLE `ratings`
   ADD CONSTRAINT `ratings_ibfk_1` FOREIGN KEY (`article_id`) REFERENCES `articles` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `ratings_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `article_tags`
+  ADD CONSTRAINT `article_tags_ibfk_1` FOREIGN KEY (`article_id`) REFERENCES `articles` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `article_tags_ibfk_2` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `tags`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

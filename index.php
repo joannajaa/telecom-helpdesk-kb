@@ -1,9 +1,20 @@
 <?php
 require_once 'includes/db.php';
+require_once 'includes/tags.php';
 require_once 'includes/header.php';
 
 $search = trim($_GET['search'] ?? '');
 $categoryFilter = (int)($_GET['cat'] ?? 0);
+$rawTags = $_GET['tag'] ?? [];
+$rawTags = is_array($rawTags) ? $rawTags : [$rawTags];
+$selectedTags = [];
+foreach ($rawTags as $rawTag) {
+    $tag = mb_strtolower(trim((string)$rawTag));
+    if ($tag !== '' && mb_strlen($tag) <= 50) {
+        $selectedTags[$tag] = true;
+    }
+}
+$selectedTags = array_keys($selectedTags);
 $sort = $_GET['sort'] ?? 'latest';
 $page = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 5;
@@ -21,6 +32,15 @@ if (!empty($search)) {
 if ($categoryFilter > 0) {
     $countSql .= " AND a.category_id = ?";
     $countParams[] = $categoryFilter;
+}
+
+foreach ($selectedTags as $tag) {
+    $countSql .= " AND EXISTS (
+        SELECT 1 FROM article_tags at
+        JOIN tags t ON t.id = at.tag_id
+        WHERE at.article_id = a.id AND t.name = ?
+    )";
+    $countParams[] = $tag;
 }
 
 $countStmt = $pdo->prepare($countSql);
@@ -54,6 +74,15 @@ if ($categoryFilter > 0) {
     $params[] = $categoryFilter;
 }
 
+foreach ($selectedTags as $tag) {
+    $sql .= " AND EXISTS (
+        SELECT 1 FROM article_tags at
+        JOIN tags t ON t.id = at.tag_id
+        WHERE at.article_id = a.id AND t.name = ?
+    )";
+    $params[] = $tag;
+}
+
 $sql .= " GROUP BY a.id";
 
 if ($sort === 'popular') {
@@ -69,10 +98,13 @@ $stmt->execute($params);
 $articles = $stmt->fetchAll();
 ?>
 
-<h2>Baza Wiedzy Helpdesk</h2>
+<h2 class="page-heading">Baza Wiedzy Helpdesk</h2>
 
 <form method="GET" action="index.php" class="filters-form">
     <input type="text" name="search" placeholder="Szukaj procedury lub błędu..." value="<?= htmlspecialchars($search) ?>">
+    <?php foreach ($selectedTags as $tag): ?>
+        <input type="hidden" name="tag[]" value="<?= htmlspecialchars($tag) ?>">
+    <?php endforeach; ?>
     
     <select name="cat">
         <option value="0">Wszystkie działy</option>
@@ -89,10 +121,25 @@ $articles = $stmt->fetchAll();
     </select>
     
     <button type="submit">Filtruj</button>
-    <?php if (!empty($search) || $categoryFilter > 0 || $sort !== 'latest'): ?>
+    <?php if (!empty($search) || $categoryFilter > 0 || !empty($selectedTags) || $sort !== 'latest'): ?>
         <a href="index.php" class="clear-filter">Wyczyść filtry</a>
     <?php endif; ?>
 </form>
+
+<?php if (!empty($selectedTags)): ?>
+    <div class="selected-tags" aria-label="Wybrane tagi">
+        <span class="selected-tags-label">Wybrane tagi:</span>
+        <?php foreach ($selectedTags as $tag): ?>
+            <?php $remainingTags = array_values(array_diff($selectedTags, [$tag])); ?>
+            <?php $removeParams = ['search' => $search, 'cat' => $categoryFilter, 'sort' => $sort]; ?>
+            <?php if (!empty($remainingTags)) { $removeParams['tag'] = $remainingTags; } ?>
+            <span class="selected-tag">
+                #<?= htmlspecialchars($tag) ?>
+                <a href="index.php?<?= htmlspecialchars(http_build_query($removeParams)) ?>" aria-label="Usuń tag <?= htmlspecialchars($tag) ?>">×</a>
+            </span>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
 
 <div class="articles-list">
     <?php if (empty($articles)): ?>
@@ -122,6 +169,15 @@ $articles = $stmt->fetchAll();
                         | <?= date('d.m.Y H:i', strtotime($art['created_at'])) ?>
                         | Oceny: <strong>+<?= (int)$art['upvotes_count'] ?></strong>
                     </p>
+                    <?php $articleTags = getArticleTags($pdo, (int)$art['id']); ?>
+                    <?php if (!empty($articleTags)): ?>
+                        <div class="article-tags">
+                            <?php foreach ($articleTags as $tag): ?>
+                                <?php $tagParams = ['search' => $search, 'cat' => $categoryFilter, 'sort' => $sort, 'tag' => array_values(array_unique(array_merge($selectedTags, [$tag])))]; ?>
+                                <a href="index.php?<?= htmlspecialchars(http_build_query($tagParams)) ?>" class="tag-link">#<?= htmlspecialchars($tag) ?></a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                     <p><?= htmlspecialchars(mb_substr($art['content'], 0, 150)) ?>...</p>
                     <a href="article.php?id=<?= $art['id'] ?>" class="read-more">Czytaj całą instrukcję &rarr;</a>
                 </div>

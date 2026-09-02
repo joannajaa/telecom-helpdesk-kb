@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/tags.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -22,6 +23,7 @@ if (!$article || ($article['user_id'] != $_SESSION['user_id'] && ($_SESSION['rol
 }
 
 $message = '';
+$articleTags = getArticleTags($pdo, $articleId);
 $categories = $pdo->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title       = trim($_POST['title'] ?? '');
     $category_id = (int)($_POST['category_id'] ?? 0);
     $content     = trim($_POST['content'] ?? '');
+    $tagNames    = parseTagNames($_POST['tags'] ?? '');
     $image_name  = $article['image'];
     
     $is_pinned = (($_SESSION['role'] ?? '') === 'admin' && isset($_POST['is_pinned'])) ? 1 : ((($_SESSION['role'] ?? '') === 'admin') ? 0 : (int)$article['is_pinned']);
@@ -75,8 +78,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($message)) {
         if (!empty($title) && !empty($content) && $category_id > 0) {
+            $pdo->beginTransaction();
             $updateStmt = $pdo->prepare("UPDATE articles SET title = ?, content = ?, image = ?, category_id = ?, is_pinned = ? WHERE id = ?");
             $updateStmt->execute([$title, $content, $image_name, $category_id, $is_pinned, $articleId]);
+            syncArticleTags($pdo, $articleId, $tagNames);
+            $pdo->commit();
 
             header("Location: article.php?id=$articleId");
             exit;
@@ -100,6 +106,11 @@ require_once 'includes/header.php';
     <div>
         <label>Tytuł:</label><br>
         <input type="text" name="title" value="<?= htmlspecialchars($article['title']) ?>" style="width: 100%;" required>
+    </div>
+    <br>
+    <div>
+        <label>Tagi (oddziel przecinkami, opcjonalnie):</label><br>
+        <input type="text" name="tags" value="<?= htmlspecialchars(implode(', ', $articleTags)) ?>" placeholder="np. router, wi-fi, diagnostyka" style="width: 100%;">
     </div>
     <br>
     <div>

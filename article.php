@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once 'includes/db.php';
+require_once 'includes/tags.php';
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -25,8 +26,10 @@ if (!$article) {
     exit;
 }
 
+$articleTags = getArticleTags($pdo, $articleId);
+
 $commentError = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_comment') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if (!isset($_SESSION['user_id'])) {
         header('Location: login.php');
         exit;
@@ -37,13 +40,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         die('Błąd weryfikacji żądania (CSRF).');
     }
 
-    $content = trim($_POST['comment_content'] ?? '');
-    if (!empty($content)) {
+    if ($_POST['action'] === 'delete_comment') {
+        if (($_SESSION['role'] ?? '') !== 'admin') {
+            die('Brak uprawnień do moderowania komentarzy.');
+        }
+
+        $commentId = (int)($_POST['comment_id'] ?? 0);
+        if ($commentId > 0) {
+            $deleteComment = $pdo->prepare('DELETE FROM comments WHERE id = ? AND article_id = ?');
+            $deleteComment->execute([$commentId, $articleId]);
+        }
+
+        header("Location: article.php?id=$articleId#comments");
+        exit;
+    }
+
+    if ($_POST['action'] === 'add_comment') {
+        $content = trim($_POST['comment_content'] ?? '');
+    }
+
+    if ($_POST['action'] === 'add_comment' && !empty($content)) {
         $stmtInsert = $pdo->prepare("INSERT INTO comments (article_id, user_id, content) VALUES (?, ?, ?)");
         $stmtInsert->execute([$articleId, $_SESSION['user_id'], $content]);
         header("Location: article.php?id=$articleId#comments");
         exit;
-    } else {
+    } elseif ($_POST['action'] === 'add_comment') {
         $commentError = 'Treść komentarza nie może być pusta.';
     }
 }
@@ -106,6 +127,14 @@ require_once 'includes/header.php';
         👤 Dodane przez: <?= htmlspecialchars($article['username']) ?> |
         🕒 <?= date('d.m.Y H:i', strtotime($article['created_at'])) ?>
     </p>
+
+    <?php if (!empty($articleTags)): ?>
+        <div class="article-tags">
+            <?php foreach ($articleTags as $tag): ?>
+                <a href="index.php?tag[]=<?= urlencode($tag) ?>" class="tag-link">#<?= htmlspecialchars($tag) ?></a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
     <?php if (!empty($article['image']) && file_exists('uploads/' . $article['image'])): ?>
         <div style="margin: 20px 0;">
@@ -179,6 +208,14 @@ require_once 'includes/header.php';
                         <div style="line-height: 1.5;">
                             <?= nl2br(htmlspecialchars($comment['content'])) ?>
                         </div>
+                        <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                            <form method="POST" action="article.php?id=<?= $article['id'] ?>" class="comment-moderation-form">
+                                <input type="hidden" name="action" value="delete_comment">
+                                <input type="hidden" name="comment_id" value="<?= $comment['id'] ?>">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                                <button type="submit" class="danger-button" onclick="return confirm('Usunąć ten komentarz?');">Usuń</button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>

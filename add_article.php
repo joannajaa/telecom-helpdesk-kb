@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/tags.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -23,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title       = trim($_POST['title'] ?? '');
     $category_id = (int)($_POST['category_id'] ?? 0);
     $content     = trim($_POST['content'] ?? '');
+    $tagNames    = parseTagNames($_POST['tags'] ?? '');
     $image_name  = null;
     $is_pinned   = (($_SESSION['role'] ?? '') === 'admin' && isset($_POST['is_pinned'])) ? 1 : 0;
 
@@ -60,8 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($message)) {
         if (!empty($title) && !empty($content) && $category_id > 0) {
+            $pdo->beginTransaction();
             $stmt = $pdo->prepare("INSERT INTO articles (title, content, image, category_id, user_id, is_pinned) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->execute([$title, $content, $image_name, $category_id, $_SESSION['user_id'], $is_pinned]);
+            syncArticleTags($pdo, (int)$pdo->lastInsertId(), $tagNames);
+            $pdo->commit();
 
             header('Location: index.php');
             exit;
@@ -85,6 +90,11 @@ require_once 'includes/header.php';
     <div>
         <label>Tytuł problemu / artykułu:</label><br>
         <input type="text" name="title" style="width: 100%;" required>
+    </div>
+    <br>
+    <div>
+        <label>Tagi (oddziel przecinkami, opcjonalnie):</label><br>
+        <input type="text" name="tags" placeholder="np. router, wi-fi, diagnostyka" style="width: 100%;">
     </div>
     <br>
     <div>

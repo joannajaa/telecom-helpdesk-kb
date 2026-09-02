@@ -27,21 +27,20 @@ Aplikacja została zbudowana w modelu klient-serwer z podziałem na warstwę pre
 * Style i widok druku: Zmienne CSS umożliwiające obsługę trzech motywów kolorystycznych oraz dedykowane reguły `@media print` przygotowujące instrukcję do czystego wydruku.
 
 ## 3. Struktura bazy danych
-Baza danych `telecom_kb` składa się z 6 powiązanych ze sobą tabel:
+Baza danych `telecom_kb` składa się z 8 powiązanych ze sobą tabel:
 
 ### Schemat tabel:
 * users – przechowuje konta konsultantów i administratorów.
   * `id` (INT, PK, AUTO_INCREMENT)
   * `username` (VARCHAR, UNIQUE)
   * `password` (VARCHAR, hash bcrypt)
-  * `email` (VARCHAR, UNIQUE)
   * `role` (VARCHAR: 'user' lub 'admin')
+  * `is_active` (TINYINT(1), DEFAULT 1)
   * `created_at` (TIMESTAMP)
 
 * categories – działy tematyczne zgłoszeń technicznych.
   * `id` (INT, PK, AUTO_INCREMENT)
   * `name` (VARCHAR)
-  * `description` (TEXT, NULLable)
 
 * articles – baza procedur technicznych.
   * `id` (INT, PK, AUTO_INCREMENT)
@@ -74,6 +73,14 @@ Baza danych `telecom_kb` składa się z 6 powiązanych ze sobą tabel:
   * `content` (TEXT)
   * `created_at` (TIMESTAMP)
 
+* tags – słownik tagów artykułów.
+  * `id` (INT, PK, AUTO_INCREMENT)
+  * `name` (VARCHAR, UNIQUE)
+
+* article_tags – tabela pośrednia relacji artykułów i tagów.
+  * `article_id` (INT, FK -> articles.id)
+  * `tag_id` (INT, FK -> tags.id)
+
 ### Relacje między tabelami:
 * categories -> articles (1:N)
 * users -> articles (1:N)
@@ -83,6 +90,7 @@ Baza danych `telecom_kb` składa się z 6 powiązanych ze sobą tabel:
 * users -> article_reactions (1:N)
 * articles -> comments (1:N)
 * users -> comments (1:N)
+* articles <-> tags (N:M)
 
 ## 4. Instrukcja instalacji i uruchomienia
 
@@ -123,8 +131,10 @@ Otwórz w przeglądarce adres:
 * Pełny moduł CRUD artykułów: Tworzenie, przeglądanie, edycja i usuwanie wpisów technicznych.
 * Obsługa załączników graficznych: Bezpieczny upload plików graficznych (walidacja typów MIME przez Fileinfo, limit rozmiaru do 2 MB, unikalne nazwy).
 * Kategoryzacja i szybka nawigacja: Podział na działy oraz możliwość bezpośredniego filtrowania listy z poziomu podglądu artykułu.
+* Tagi artykułów: Możliwość przypisywania wielu tagów do procedury oraz filtrowania po kliknięciu tagu.
 * Wyszukiwanie i sortowanie: Wyszukiwanie pełnotekstowe w tytułach i treściach, filtrowanie po działach, sortowanie według daty lub popularności oraz paginacja wyników.
 * Przypinanie procedur awaryjnych: Możliwość oznaczenia wpisu jako przypiętego (`is_pinned`) przez administratora, co pozycjonuje go na górze listy.
+* Panel administratora: Statystyki, zarządzanie rolami i aktywnością użytkowników oraz dodawanie/usuwanie pustych kategorii. Moderacja komentarzy odbywa się bezpośrednio pod odpowiednimi artykułami.
 * Asynchroniczny system ocen (AJAX): Ocenianie przydatności procedury bez przeładowania strony z blokadą wielokrotnego głosu.
 * System reakcji graficznych (AJAX): Możliwość reagowania na wpisy wybranymi emotkami w czasie rzeczywistym.
 * Notatki techniczne: Moduł komentarzy pod procedurami chroniony przed atakami CSRF i XSS.
