@@ -2,6 +2,10 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 <!DOCTYPE html>
 <html lang="pl">
@@ -26,7 +30,6 @@ if (session_status() === PHP_SESSION_NONE) {
                 <a href="login.php">Logowanie</a>
                 <a href="register.php">Rejestracja</a>
             <?php endif; ?>
-
 
             <select id="theme-switch" class="theme-selector">
                 <option value="light">☀️ Jasny</option>
