@@ -906,12 +906,6 @@ a {
         color: #000000;
     }
 
-    @media (max-width: 700px) {
-        .admin-categories-section {
-            width: 100%;
-        }
-    }
-
     .main-header,
     .main-footer,
     .admin-actions,
@@ -937,5 +931,179 @@ a {
     a {
         color: #000000;
         text-decoration: none;
+    }
+}
+
+@media (max-width: 700px) {
+    body {
+        font-size: 0.95rem;
+    }
+
+    .main-header {
+        display: block;
+        padding: 14px 16px;
+    }
+
+    .main-header .logo h1 a {
+        display: block;
+        font-size: 1.05rem;
+        line-height: 1.3;
+        text-align: center;
+    }
+
+    .main-header .logo {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+
+    .main-header .logo h1 {
+        text-align: center;
+    }
+
+    .main-header .logo h1 a {
+        display: block;
+    }
+
+    .nav-links {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .nav-links a,
+    .nav-links .user-badge,
+    .nav-links .notifications-menu,
+    .nav-links .theme-selector {
+        width: 100%;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .nav-links .user-badge {
+        grid-column: auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .nav-links .theme-selector {
+        grid-column: auto;
+        padding-left: 6px;
+        padding-right: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .container {
+        width: calc(100% - 20px);
+        margin: 12px auto;
+        padding: 18px 14px;
+        border-radius: 10px;
+    }
+
+    .page-heading,
+    .auth-heading {
+        font-size: 1.35rem;
+    }
+
+    .filters-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 9px;
+        margin-bottom: 18px;
+    }
+
+    .filters-form input[type="text"],
+    .filters-form select,
+    .filters-form button,
+    .filters-form .clear-filter {
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .filters-form .clear-filter {
+        text-align: center;
+    }
+
+    .article-card {
+        display: block;
+        padding: 16px 0;
+    }
+
+    .article-thumbnail {
+        width: 100%;
+        height: 170px;
+        margin-bottom: 12px;
+    }
+
+    .article-body h3 a {
+        font-size: 1.08rem;
+        line-height: 1.35;
+    }
+
+    .article-meta {
+        line-height: 1.55;
+    }
+
+    .article-details h2 {
+        font-size: 1.35rem;
+        line-height: 1.3;
+    }
+
+    .article-details > div:first-child {
+        display: block !important;
+    }
+
+    .favorite-form {
+        margin-top: 12px;
+    }
+
+    .favorite-button,
+    .report-form button,
+    .comment-moderation-form button {
+        width: 100%;
+    }
+
+    .opinion-card {
+        display: block;
+    }
+
+    .emotes-bar {
+        justify-content: flex-start;
+    }
+
+    .admin-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        min-width: 620px;
+    }
+
+    .admin-report {
+        padding: 14px;
+    }
+
+    .admin-report form {
+        display: grid;
+        gap: 8px;
+    }
+
+    .admin-report form select,
+    .admin-report form button {
+        width: 100%;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+
+    textarea {
+        max-width: 100%;
     }
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Wrz 04, 2026 at 11:55 PM
+-- Generation Time: Wrz 05, 2026 at 01:18 AM
 -- Wersja serwera: 10.4.32-MariaDB
 -- Wersja PHP: 8.2.12
 
@@ -286,7 +286,8 @@ INSERT INTO `comments` (`id`, `article_id`, `user_id`, `parent_comment_id`, `con
 (11, 7, 2, 4, 'test', '2026-09-04 21:30:08'),
 (12, 11, 3, NULL, 'test', '2026-09-04 21:38:10'),
 (13, 12, 3, NULL, 'testtt', '2026-09-04 21:42:58'),
-(14, 13, 3, NULL, 'test', '2026-09-04 21:49:24');
+(14, 13, 3, NULL, 'test', '2026-09-04 21:49:24'),
+(15, 13, 2, 14, 'test odpowiedzi', '2026-09-04 23:04:12');
 
 -- --------------------------------------------------------
 
@@ -352,7 +353,8 @@ INSERT INTO `notifications` (`id`, `user_id`, `article_id`, `comment_id`, `messa
 (11, 3, NULL, 10, 'admin odpowiedział na Twój komentarz.', 1, '2026-09-04 21:27:46'),
 (12, 4, 7, NULL, 'testowy zgłosił nieaktualność Twojego artykułu.', 0, '2026-09-04 21:30:01'),
 (13, 1, 7, NULL, 'testowy zgłosił nieaktualność Twojego artykułu.', 0, '2026-09-04 21:30:01'),
-(14, 4, NULL, 11, 'testowy odpowiedział na Twój komentarz.', 0, '2026-09-04 21:30:08');
+(14, 4, NULL, 11, 'testowy odpowiedział na Twój komentarz.', 0, '2026-09-04 21:30:08'),
+(15, 3, NULL, 15, 'testowy odpowiedział na Twój komentarz.', 0, '2026-09-04 23:04:12');
 
 -- --------------------------------------------------------
 
@@ -603,7 +605,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `favorites`
@@ -615,7 +617,7 @@ ALTER TABLE `favorites`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `ratings`
