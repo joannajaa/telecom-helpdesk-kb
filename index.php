@@ -15,7 +15,7 @@ foreach ($rawTags as $rawTag) {
     }
 }
 $selectedTags = array_keys($selectedTags);
-$sort = $_GET['sort'] ?? 'latest';
+$sort = $_GET['sort'] ?? 'popular';
 $page = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 5;
 
@@ -121,7 +121,7 @@ $articles = $stmt->fetchAll();
     </select>
     
     <button type="submit">Filtruj</button>
-    <?php if (!empty($search) || $categoryFilter > 0 || !empty($selectedTags) || $sort !== 'latest'): ?>
+    <?php if (!empty($search) || $categoryFilter > 0 || !empty($selectedTags) || $sort !== 'popular'): ?>
         <a href="index.php" class="clear-filter">Wyczyść filtry</a>
     <?php endif; ?>
 </form>
@@ -146,7 +146,8 @@ $articles = $stmt->fetchAll();
         <p>Brak artykułów spełniających kryteria.</p>
     <?php else: ?>
         <?php foreach ($articles as $art): ?>
-            <article class="article-card" style="<?= !empty($art['is_pinned']) ? 'border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05);' : '' ?>">
+            <?php $isOutdated = $art['category_name'] === 'Nieaktualne'; ?>
+            <article class="article-card" style="<?= $isOutdated ? 'border-left: 4px solid #9ca3af; background: rgba(156, 163, 175, 0.08);' : (!empty($art['is_pinned']) ? 'border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05);' : '') ?>">
                 <?php if (!empty($art['image']) && file_exists('uploads/' . $art['image'])): ?>
                     <div class="article-thumbnail">
                         <a href="article.php?id=<?= $art['id'] ?>">
@@ -160,17 +161,17 @@ $articles = $stmt->fetchAll();
                         <?php if (!empty($art['is_pinned'])): ?>
                             <span style="color: #f59e0b; font-size: 0.9em; margin-right: 4px;" title="Przypięty artykuł">📌</span>
                         <?php endif; ?>
-                        <?php if (!empty($art['is_archived'])): ?>
+                        <?php if (!empty($art['is_archived']) && !$isOutdated): ?>
                             <span class="archived-badge">Archiwalny</span>
                         <?php endif; ?>
-                        <a href="article.php?id=<?= $art['id'] ?>"><?= htmlspecialchars($art['title']) ?></a>
+                        <a href="article.php?id=<?= $art['id'] ?>" class="<?= $isOutdated ? 'outdated-title' : '' ?>"><?= htmlspecialchars($art['title']) ?></a>
                     </h3>
                     <p class="article-meta">
                         Kategoria: 
                         <a class="category-link" href="index.php?cat=<?= $art['category_id'] ?>"><strong><?= htmlspecialchars($art['category_name']) ?></strong></a> 
                         | Autor: <?= htmlspecialchars($art['username']) ?> 
                         | <?= date('d.m.Y H:i', strtotime($art['created_at'])) ?>
-                        | Oceny: <strong>+<?= (int)$art['upvotes_count'] ?></strong>
+                        | Oceny: <strong><?= $isOutdated ? '0' : '+' . (int)$art['upvotes_count'] ?></strong>
                     </p>
                     <?php $articleTags = getArticleTags($pdo, (int)$art['id']); ?>
                     <?php if (!empty($articleTags)): ?>

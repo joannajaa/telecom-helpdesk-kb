@@ -19,6 +19,93 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedback = document.getElementById('rating-feedback');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+    const searchInput = document.querySelector('.filters-form input[name="search"]');
+    const articlesList = document.querySelector('.articles-list');
+    let searchTimer;
+    let searchRequest;
+
+    if (searchInput && articlesList) {
+        const escapeHtml = (value) => String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+
+        const renderArticles = (articles) => {
+            if (!articles.length) {
+                articlesList.innerHTML = '<p>Brak artykułów spełniających kryteria.</p>';
+                return;
+            }
+
+            articlesList.innerHTML = articles.map((article) => {
+                const isOutdated = article.category_name === 'Nieaktualne';
+                const cardStyle = isOutdated
+                    ? 'border-left: 4px solid #9ca3af; background: rgba(156, 163, 175, 0.08);'
+                    : (article.is_pinned ? 'border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05);' : '');
+                const image = article.image
+                    ? `<div class="article-thumbnail"><a href="article.php?id=${article.id}"><img src="uploads/${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}"></a></div>`
+                    : '';
+                const tags = article.tags.map((tag) => `<a href="index.php?tag[]=${encodeURIComponent(tag)}" class="tag-link">#${escapeHtml(tag)}</a>`).join(' ');
+                const titleClass = isOutdated ? 'outdated-title' : '';
+                const rating = isOutdated ? '0' : `+${article.upvotes_count}`;
+
+                return `<article class="article-card" style="${cardStyle}">
+                    ${image}
+                    <div class="article-body">
+                        <h3>
+                            ${article.is_pinned ? '<span style="color: #f59e0b; font-size: 0.9em; margin-right: 4px;" title="Przypięty artykuł">📌</span>' : ''}
+                            <a href="article.php?id=${article.id}" class="${titleClass}">${escapeHtml(article.title)}</a>
+                        </h3>
+                        <p class="article-meta">Kategoria:
+                            <a class="category-link" href="index.php?cat=${article.category_id}"><strong>${escapeHtml(article.category_name)}</strong></a>
+                            | Autor: ${escapeHtml(article.username)}
+                            | ${escapeHtml(new Date(article.created_at).toLocaleDateString('pl-PL'))}
+                            | Oceny: <strong>${rating}</strong>
+                        </p>
+                        <div class="article-tags">${tags}</div>
+                        <p>${escapeHtml(article.content.substring(0, 150))}...</p>
+                        <a href="article.php?id=${article.id}" class="read-more">Czytaj całą instrukcję &rarr;</a>
+                    </div>
+                </article>`;
+            }).join('');
+        };
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(async () => {
+                const form = searchInput.form;
+                const params = new URLSearchParams(new FormData(form));
+                params.set('search', searchInput.value.trim());
+                params.delete('page');
+                params.set('sort', form.querySelector('[name="sort"]').value);
+                if (searchRequest) {
+                    searchRequest.abort();
+                }
+                searchRequest = new AbortController();
+                articlesList.classList.add('is-loading');
+
+                try {
+                    const response = await fetch(`search_ajax.php?${params.toString()}`, { signal: searchRequest.signal });
+                    if (!response.ok) {
+                        throw new Error('Search request failed');
+                    }
+                    const data = await response.json();
+                    renderArticles(data.articles);
+                    document.querySelectorAll('.pagination').forEach((pagination) => {
+                        pagination.hidden = true;
+                    });
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        articlesList.innerHTML = '<p>Nie udało się wyszukać artykułów.</p>';
+                    }
+                } finally {
+                    articlesList.classList.remove('is-loading');
+                }
+            }, 250);
+        });
+    }
+
     if (likeBtn) {
         likeBtn.addEventListener('click', async () => {
             const articleId = likeBtn.getAttribute('data-id');

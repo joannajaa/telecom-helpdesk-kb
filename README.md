@@ -130,11 +130,11 @@ Baza danych `telecom_kb` składa się z 11 powiązanych ze sobą tabel:
 1. Skopiuj katalog projektu do folderu serwera XAMPP, np.:
    `C:\xampp\htdocs\telecom-kb`
 
-### Krok 2: Import bazy danych
+### Krok 2: Baza danych
 1. Uruchom Apache oraz MySQL w XAMPP Control Panel.
 2. Otwórz w przeglądarce adres: `http://localhost/phpmyadmin/`.
-3. Utwórz nową bazę danych o nazwie `telecom_kb` z kodowaniem `utf8mb4_unicode_ci` (eksport SQL zawiera również instrukcję `CREATE DATABASE IF NOT EXISTS`).
-4. Przejdź do zakładki Importuj, wybierz plik `telecom_kb.sql` i zatwierdź import.
+3. Użyj istniejącej bazy `telecom_kb` albo utwórz ją z kodowaniem `utf8mb4_unicode_ci`.
+4. Jeśli baza pochodzi z wcześniejszej wersji projektu, wykonaj skrypt aktualizacyjny podany w dokumentacji projektu.
 
 ### Krok 3: Weryfikacja połączenia
 W pliku `includes/db.php` upewnij się, że parametry połączenia odpowiadają konfiguracji serwera:
@@ -161,10 +161,11 @@ Otwórz w przeglądarce adres:
 * Kategoryzacja i szybka nawigacja: Podział na działy oraz możliwość bezpośredniego filtrowania listy z poziomu podglądu artykułu.
 * Tagi artykułów: Możliwość przypisywania wielu tagów do procedury oraz filtrowania po kliknięciu tagu.
 * Ulubione artykuły: Możliwość zapisywania artykułów i przeglądania ich na osobnej stronie.
-* Wyszukiwanie i sortowanie: Wyszukiwanie pełnotekstowe w tytułach i treściach, filtrowanie po działach, sortowanie według daty lub popularności oraz paginacja wyników.
+* Wyszukiwanie i sortowanie: Wyszukiwanie pełnotekstowe w tytułach i treściach, filtrowanie po działach, sortowanie według daty lub popularności oraz paginacja wyników. Podczas wpisywania tekstu lista wyników jest dodatkowo odświeżana asynchronicznie.
 * Przypinanie procedur awaryjnych: Możliwość oznaczenia wpisu jako przypiętego (`is_pinned`) przez administratora, co pozycjonuje go na górze listy.
 * Archiwizacja artykułów: Administrator może oznaczyć nieaktualny artykuł jako archiwalny.
 * Zgłaszanie nieaktualności: Użytkownicy mogą zgłaszać artykuły autorowi i administratorom, a zgłoszenia są obsługiwane w panelu administratora.
+* Oznaczanie nieaktualnych artykułów: Po rozpatrzeniu zgłoszenia administrator przenosi artykuł do kategorii „Nieaktualne”, dodaje tag `nieaktualne`, oznacza tytuł i zeruje oceny, zachowując ulubione użytkowników.
 * Panel administratora: Statystyki, zarządzanie rolami i aktywnością użytkowników oraz dodawanie/usuwanie pustych kategorii. Moderacja komentarzy odbywa się bezpośrednio pod odpowiednimi artykułami.
 * Asynchroniczny system ocen (AJAX): Ocenianie przydatności procedury bez przeładowania strony z blokadą wielokrotnego głosu.
 * System reakcji graficznych (AJAX): Możliwość reagowania na wpisy wybranymi emotkami w czasie rzeczywistym.

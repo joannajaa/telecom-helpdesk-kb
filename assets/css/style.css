@@ -61,6 +61,10 @@ body {
     flex-direction: column;
 }
 
+.outdated-title {
+    color: #6b7280 !important;
+}
+
 .main-header {
     background-color: var(--bg-header);
     color: #ffffff;

@@ -1,10 +1,19 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/tags.php';
 
 if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     header('Location: index.php');
     exit;
+}
+
+$outdatedCategoryStmt = $pdo->prepare('SELECT id FROM categories WHERE name = ? LIMIT 1');
+$outdatedCategoryStmt->execute(['Nieaktualne']);
+$outdatedCategoryId = $outdatedCategoryStmt->fetchColumn();
+if ($outdatedCategoryId === false) {
+    $pdo->prepare('INSERT INTO categories (name) VALUES (?)')->execute(['Nieaktualne']);
+    $outdatedCategoryId = $pdo->lastInsertId();
 }
 
 if (empty($_SESSION['csrf_token'])) {
@@ -74,8 +83,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$report) {
                 $message = 'Nie znaleziono zgłoszenia.';
             } else {
-                $stmt = $pdo->prepare('UPDATE article_reports SET status = ?, resolved_by = ? WHERE id = ?');
-                $stmt->execute([$status, $_SESSION['user_id'], $reportId]);
+                $pdo->beginTransaction();
+                try {
+                    $stmt = $pdo->prepare('UPDATE article_reports SET status = ?, resolved_by = ? WHERE id = ?');
+                    $stmt->execute([$status, $_SESSION['user_id'], $reportId]);
+
+                    if ($status === 'resolved') {
+                        $articleStmt = $pdo->prepare('SELECT title FROM articles WHERE id = ?');
+                        $articleStmt->execute([$report['article_id']]);
+                        $article = $articleStmt->fetch();
+                        if (!$article) {
+                            throw new RuntimeException('Nie znaleziono artykułu powiązanego ze zgłoszeniem.');
+                        }
+
+                        $title = (string)$article['title'];
+                        if (strpos($title, '[NIEAKTUALNE]') !== 0) {
+                            $title = '[NIEAKTUALNE] ' . $title;
+                        }
+                        $updateArticle = $pdo->prepare(
+                            'UPDATE articles SET title = ?, category_id = ?, is_archived = 1 WHERE id = ?'
+                        );
+                        $updateArticle->execute([$title, (int)$outdatedCategoryId, $report['article_id']]);
+
+                        $tags = getArticleTags($pdo, (int)$report['article_id']);
+                        $tags = array_values(array_unique(array_merge($tags, ['nieaktualne'])));
+                        syncArticleTags($pdo, (int)$report['article_id'], $tags);
+
+                        // Keep favorites; reset only the article ratings.
+                        $pdo->prepare('DELETE FROM ratings WHERE article_id = ?')
+                            ->execute([$report['article_id']]);
+                    }
+                    $pdo->commit();
+                } catch (PDOException|RuntimeException $exception) {
+                    $pdo->rollBack();
+                    throw $exception;
+                }
 
                 $statusLabels = [
                     'open' => 'ponownie otwarte',

@@ -27,6 +27,7 @@ if (!$article) {
 }
 
 $articleTags = getArticleTags($pdo, $articleId);
+$isOutdated = $article['category_name'] === 'Nieaktualne';
 
 $commentError = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -232,7 +233,7 @@ require_once 'includes/header.php';
 
 <article class="article-details">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
-        <h2><?= htmlspecialchars($article['title']) ?></h2>
+        <h2 class="<?= $isOutdated ? 'outdated-title' : '' ?>"><?= htmlspecialchars($article['title']) ?></h2>
         <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <form method="POST" action="article.php?id=<?= $article['id'] ?>" class="favorite-form">
@@ -268,7 +269,7 @@ require_once 'includes/header.php';
         <?= nl2br(htmlspecialchars($article['content'])) ?>
     </div>
 
-    <?php if (!empty($article['is_archived'])): ?>
+    <?php if (!empty($article['is_archived']) && !$isOutdated): ?>
         <p class="archived-badge">Artykuł archiwalny</p>
     <?php endif; ?>
 
@@ -276,7 +277,7 @@ require_once 'includes/header.php';
         <div class="rating-section">
             <h4>Czy ta instrukcja pomogła rozwiązać zgłoszenie?</h4>
             <div style="margin-top: 10px; display: flex; align-items: center; gap: 12px;">
-                <button id="like-btn" data-id="<?= $article['id'] ?>" <?= !isset($_SESSION['user_id']) ? 'disabled' : '' ?>>
+                <button id="like-btn" data-id="<?= $article['id'] ?>" <?= !isset($_SESSION['user_id']) || $isOutdated ? 'disabled' : '' ?>>
                     <span id="like-icon" aria-label="Lubię to">👍</span>
                     <span id="likes-count"><?= $likesCount ?></span>
                 </button>
@@ -284,6 +285,8 @@ require_once 'includes/header.php';
             </div>
             <?php if (!isset($_SESSION['user_id'])): ?>
                 <small style="color: var(--text-muted); display: block; margin-top: 6px;">Zaloguj się, aby ocenić ten artykuł.</small>
+            <?php elseif ($isOutdated): ?>
+                <small style="color: var(--text-muted); display: block; margin-top: 6px;">Artykuł nieaktualny — ocenianie jest wyłączone.</small>
             <?php endif; ?>
         </div>
 

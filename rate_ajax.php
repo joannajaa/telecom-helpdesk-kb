@@ -25,6 +25,23 @@ if ($articleId <= 0) {
 }
 
 try {
+    $articleCheck = $pdo->prepare(
+        "SELECT a.id, c.name AS category_name
+         FROM articles a
+         JOIN categories c ON c.id = a.category_id
+         WHERE a.id = ?"
+    );
+    $articleCheck->execute([$articleId]);
+    $article = $articleCheck->fetch();
+    if (!$article) {
+        echo json_encode(['success' => false, 'message' => 'Nie znaleziono artykułu.']);
+        exit;
+    }
+    if ($article['category_name'] === 'Nieaktualne') {
+        echo json_encode(['success' => false, 'message' => 'Nieaktualnego artykułu nie można oceniać.']);
+        exit;
+    }
+
     $check = $pdo->prepare("SELECT id FROM ratings WHERE article_id = ? AND user_id = ?");
     $check->execute([$articleId, $userId]);
     $existing = $check->fetch();
